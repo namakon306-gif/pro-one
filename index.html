@@ -1,0 +1,296 @@
+# pro-one
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WIN PRO</title>
+
+<style>
+body{
+    font-family:Arial,sans-serif;
+    background:#f4f4f4;
+    margin:0;
+    padding:10px;
+    font-size:12px;
+}
+.wrap{
+    max-width:1000px;
+    margin:auto;
+    background:#fff;
+    padding:12px;
+    border-radius:10px;
+}
+textarea,input{
+    width:100%;
+    box-sizing:border-box;
+    padding:8px;
+    font-size:12px;
+    margin:4px 0;
+}
+button{
+    padding:8px;
+    font-size:12px;
+    margin:2px;
+    cursor:pointer;
+}
+.box{
+    background:#f8f8f8;
+    border-radius:8px;
+    padding:8px;
+    margin-top:8px;
+}
+pre{
+    white-space:pre-wrap;
+    word-break:break-word;
+    margin:0;
+}
+.row{
+    display:flex;
+    gap:5px;
+    flex-wrap:wrap;
+}
+.row button{
+    flex:1;
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<h2>📊 WIN PRO</h2>
+
+<h3>📊 วิเคราะห์ย้อนหลัง</h3>
+
+<textarea id="history" rows="10"
+placeholder="วางข้อมูลย้อนหลัง"></textarea>
+
+<button onclick="analyze()">📊 วิเคราะห์ย้อนหลัง</button>
+
+<div class="box">
+HOT = <span id="hot"></span><br>
+WARM = <span id="warm"></span><br>
+COLD = <span id="cold"></span><br>
+DEAD = <span id="dead"></span><br><br>
+
+สูตร1(ประจำวัน)= <span id="f1"></span><br>
+สูตร2(รวมยอด)= <span id="f2"></span><br>
+สูตร3(Hot+Cold+Dead)= <span id="f3"></span>
+</div>
+
+<h3>🎯 สร้างวินจากเลขกำหนดเอง</h3>
+
+<input
+id="manual"
+placeholder="เช่น 97402516">
+
+<button onclick="manualWin()">
+🎯 สร้างวิน
+</button>
+
+<div class="row">
+<button onclick="copyVar(win2)">📋 คัดลอกวิน2</button>
+<button onclick="copyVar(win3)">📋 คัดลอกวิน3</button>
+<button onclick="copyVar(win4)">📋 คัดลอกวิน4</button>
+<button onclick="copyAll()">📋 คัดลอกทั้งหมด</button>
+<button onclick="clearAll()">🗑 ล้างข้อมูล</button>
+</div>
+
+<div class="box">
+<b>วิน2 (<span id="c2">0</span>)</b>
+<pre id="o2"></pre>
+</div>
+
+<div class="box">
+<b>วิน3 (<span id="c3">0</span>)</b>
+<pre id="o3"></pre>
+</div>
+
+<div class="box">
+<b>วิน4 (<span id="c4">0</span>)</b>
+<pre id="o4"></pre>
+</div>
+
+</div>
+
+<script>
+
+let win2='';
+let win3='';
+let win4='';
+
+function fmt(arr){
+    let txt='';
+    arr.forEach((v,i)=>{
+        txt+=v+' ';
+        if((i+1)%10===0) txt+='\n';
+    });
+    return txt;
+}
+
+function gen(pool,n){
+
+    let digits=[...new Set(pool.split(''))]
+        .sort();
+
+    let result=[];
+
+    function comb(start,temp){
+
+        if(temp.length===n){
+            result.push(temp.join(''));
+            return;
+        }
+
+        for(let i=start;i<digits.length;i++){
+            temp.push(digits[i]);
+            comb(i+1,temp);
+            temp.pop();
+        }
+    }
+
+    comb(0,[]);
+
+    return result;
+}
+
+function render(pool){
+
+    pool=[...new Set(
+        pool.replace(/\D/g,'').split('')
+    )].sort().join('');
+
+    let a2=gen(pool,2);
+    let a3=gen(pool,3);
+    let a4=gen(pool,4);
+
+    win2=a2.join(' ');
+    win3=a3.join(' ');
+    win4=a4.join(' ');
+
+    document.getElementById('c2').innerText=a2.length;
+    document.getElementById('c3').innerText=a3.length;
+    document.getElementById('c4').innerText=a4.length;
+
+    document.getElementById('o2').innerText=fmt(a2);
+    document.getElementById('o3').innerText=fmt(a3);
+    document.getElementById('o4').innerText=fmt(a4);
+}
+
+function analyze(){
+
+    let txt=
+    document.getElementById('history').value;
+
+    let digits=
+    txt.match(/\d/g)||[];
+
+    let freq={};
+
+    for(let i=0;i<10;i++){
+        freq[i]=0;
+    }
+
+    digits.forEach(d=>{
+        freq[d]++;
+    });
+
+    let arr=[];
+
+    for(let i=0;i<10;i++){
+        arr.push({
+            d:String(i),
+            c:freq[i]
+        });
+    }
+
+    arr.sort(
+        (a,b)=>b.c-a.c||a.d-b.d
+    );
+
+    let hot=
+    arr.slice(0,3)
+       .map(x=>x.d)
+       .join('');
+
+    let warm=
+    arr.slice(3,6)
+       .map(x=>x.d)
+       .join('');
+
+    let cold=
+    arr.slice(6,9)
+       .map(x=>x.d)
+       .join('');
+
+    let dead=
+    arr.slice(9,10)
+       .map(x=>x.d)
+       .join('');
+
+    document.getElementById('hot').innerText=hot;
+    document.getElementById('warm').innerText=warm;
+    document.getElementById('cold').innerText=cold;
+    document.getElementById('dead').innerText=dead;
+
+    let f1=
+    hot+
+    warm+
+    (cold[0]||'');
+
+    let f2=
+    hot+
+    warm+
+    (dead[0]||'');
+
+    let f3=
+    hot+
+    cold+
+    (dead[0]||'');
+
+    document.getElementById('f1').innerText=f1;
+    document.getElementById('f2').innerText=f2;
+    document.getElementById('f3').innerText=f3;
+}
+
+function manualWin(){
+
+    let num=
+    document.getElementById('manual')
+    .value
+    .replace(/\D/g,'');
+
+    render(num);
+}
+
+function copyVar(txt){
+
+    navigator.clipboard.writeText(txt);
+}
+
+function copyAll(){
+
+    navigator.clipboard.writeText(
+
+`วิน2
+${win2}
+
+วิน3
+${win3}
+
+วิน4
+${win4}`
+
+    );
+}
+
+function clearAll(){
+
+    location.reload();
+}
+
+</script>
+
+</body>
+</html>
